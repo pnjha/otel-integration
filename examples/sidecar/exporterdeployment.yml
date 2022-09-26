@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-metric-producer
+  labels:
+    app: otel-metric-producer
+    component: otel-metric-producer
+spec:
+  selector:
+    matchLabels:
+      app: otel-metric-producer
+      component: otel-metric-producer
+  minReadySeconds: 5
+  progressDeadlineSeconds: 120
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: otel-metric-producer
+        component: otel-metric-producer
+    spec:
+      serviceAccountName: bksvc-service-account
+      imagePullSecrets:
+        - name: my-secret
+      containers:
+        - image: <dockerimage>
+          name: otel-metrics-producer
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 400Mi
+        - image: otel/opentelemetry-collector-contrib:0.59.0
+          name: otel-sidecar-collector
+          command:
+            - "/otelcol-contrib"
+            - "--config=/conf/otel-collector-config.yaml"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 400Mi
+          ports:
+          - containerPort: 4317 # Default endpoint for OpenTelemetry receiver.
+          - containerPort: 4318 # Default endpoint for OpenTelemetry receiver.
+          volumeMounts:
+          - name: otel-collector-config-vol
+            mountPath: /conf
+      volumes:
+        - configMap:
+            name: otel-collector-sidecar-conf
+            items:
+              - key: otel-sidecar-config
+                path: otel-collector-config.yaml
+          name: otel-collector-config-vol

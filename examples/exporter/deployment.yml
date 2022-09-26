@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-exporter
+  labels:
+    app: otel-exporter
+    component: otel-exporter
+spec:
+  selector:
+    matchLabels:
+      app: otel-exporter
+      component: otel-exporter
+  minReadySeconds: 5
+  progressDeadlineSeconds: 120
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: otel-exporter
+        component: otel-exporter
+    spec:
+      serviceAccountName: bksvc-service-account
+      containers:
+        - image: <dockerimage>
+          env:
+            - name: COLLECTOR_ENDPOINT
+              value: http://100.65.105.166:4317
+          name: otel-exporter
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 400Mi
+      imagePullSecrets:
+        - name: my-secret

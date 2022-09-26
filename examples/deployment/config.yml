@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-conf
+  labels:
+    app: otel-collector
+    component: otel-collector-conf
+data:
+  otel-collector-config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      k8s_cluster:
+        auth_type: serviceAccount
+        node_conditions_to_report: [Ready, MemoryPressure]
+        allocatable_types_to_report: [cpu, memory]
+      postgresql:
+        endpoint: postgres-dabba6ea-a5ff-4ef7-96a8-720df5e8e36d.czu8vw6tkid8.us-east-2.rds.amazonaws.com:1573
+        transport: tcp
+        username: <redacted>
+        password: <redacted>
+        databases:
+          - <redacted>
+        collection_interval: 10s
+        tls:
+          insecure: false
+    processors:
+      batch:
+        send_batch_max_size: 8192
+        send_batch_size: 8192
+        timeout: 30s
+    exporters:
+      logging:
+        loglevel: debug
+      dynatrace:
+        prefix: otel
+        timeout: 30s
+        default_dimensions:
+          dimension_example: dimension_value
+        endpoint: "https://apm.cf.stagingaws.hanavlab.ondemand.com/e/28676d69-073f-4070-9b92-0d6994188df7/api/v2/metrics/ingest"
+        api_token: "<redacted>"
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 120s
+        sending_queue:
+          enabled: true
+          num_consumers: 10
+          queue_size: 5000
+      prometheusremotewrite:
+        endpoint: https://560265:<redacted>@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp,k8s_cluster]
+          processors: [batch]
+          exporters: [dynatrace]

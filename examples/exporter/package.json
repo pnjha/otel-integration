@@ -1,0 +1,19 @@
+{
+  "name": "exporter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@opentelemetry/api": "^1.2.0",
+    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.32.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.32.0",
+    "@opentelemetry/resources": "^1.6.0",
+    "@opentelemetry/sdk-metrics-base": "^0.31.0"
+  }
+}

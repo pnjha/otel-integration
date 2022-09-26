@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector-deployment
+  labels:
+    app: otel-collector-deployment
+    component: otel-collector-deployment
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector-deployment
+      component: otel-collector-deployment
+  minReadySeconds: 5
+  progressDeadlineSeconds: 120
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: otel-collector-deployment
+        component: otel-collector-deployment
+    spec:
+      containers:
+      - command:
+          - "/otelcol-contrib"
+          - "--config=/conf/otel-collector-deployment-config.yaml"
+        image: otel/opentelemetry-collector-contrib:0.59.0
+        name: otel-collector-deployment
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 400Mi
+        ports:
+        - containerPort: 4317
+        - containerPort: 4318
+        volumeMounts:
+        - name: otel-collector-config-vol
+          mountPath: /conf
+      volumes:
+        - configMap:
+            name: otel-collector-deployment-conf
+            items:
+              - key: otel-deployment-config
+                path: otel-collector-deployment-config.yaml
+          name: otel-collector-config-vol

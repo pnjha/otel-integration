@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-sidecar-conf
+  labels:
+    app: otel-collector-sidecar-conf
+    component: otel-collector-sidecar-conf
+data:
+  otel-sidecar-config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      k8s_cluster:
+        auth_type: serviceAccount
+        node_conditions_to_report: [Ready, MemoryPressure]
+        allocatable_types_to_report: [cpu, memory]
+    processors:
+      batch:
+        send_batch_max_size: 10
+        send_batch_size: 2
+        timeout: 30s
+    exporters:
+      logging:
+        loglevel: debug
+      otlp:
+        endpoint: otel-collector-deployment-service:4317
+        tls:
+          insecure: true
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp,k8s_cluster]
+          processors: [batch]
+          exporters: [otlp,logging]

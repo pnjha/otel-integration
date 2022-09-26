@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+    component: otel-collector
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+      component: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+        component: otel-collector
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+      - command:
+          - "/otelcol-contrib"
+          - "--config=/conf/otel-agent-config.yaml"
+        image: otel/opentelemetry-collector-contrib:0.59.0
+        name: otel-collector
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 4317 # Default OpenTelemetry receiver port for gRPC.
+        - containerPort: 4318 # Default OpenTelemetry receiver port for HTTP.
+        volumeMounts:
+        - name: otel-agent-config-vol
+          mountPath: /conf
+      volumes:
+        - configMap:
+            name: otel-collector-conf
+            items:
+              - key: otel-agent-config
+                path: otel-agent-config.yaml
+          name: otel-agent-config-vol
